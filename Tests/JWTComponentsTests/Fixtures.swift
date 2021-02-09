@@ -202,7 +202,7 @@ class GenerateFixture: XCTestCase {
         print("\n=== P521:\n\(privateKey_P521.pemRepresentation)\n\n\(privateKey_P521.publicKey.pemRepresentation)")
     }
 
-    func test_generateSignatures() throws {
+    func x_test_generateSignatures() throws {
         try Fixture.all.forEach { fixture in
             let parts = fixture.jwt.split(separator: ".")
             let header = parts.first!
