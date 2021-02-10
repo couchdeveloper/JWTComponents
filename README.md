@@ -49,7 +49,7 @@ jwtc.setValue("HS256", forHeaderParameter: .alg)
 
 There are functions for standard claims, but you can set any custom claim value or any JOSE parameter whose type is JSON encodable:
 ```Swift
-jwtc.setValue("value", forClaim: ["value1", "value2"])
+jwtc.setValue(["value1", "value2"], forClaim: "myClaim")
 ```
 
 When finished composing the JWT, we want to add a signature. What we need for this is a "Signer" and a secret or key to parameterize the signing.
