@@ -129,7 +129,7 @@ let verifier = try JWTFactory.createJWTVerifier(algorithm: .ES256, keyData: secr
 try jwtc.verify(with: verifier)
 ```
 
-We create a signer with a known algorithm (ES256) and the known secret. Then we verify the JWS with the signer. If the JWS is valid, the function will simply succeed.
+We create a verifier with a known algorithm (ES256) and the known secret. Then we verify the JWS with the verifier. If the JWS is valid, the function will simply succeed.
 
 Otherwise, if the JWS is not valid, for example, if the JWS has been tampered with, function `verify(with:)` will fail. Printing the error to the console will show this:
 
