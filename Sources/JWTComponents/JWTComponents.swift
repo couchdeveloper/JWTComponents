@@ -36,6 +36,23 @@ public struct JOSEHeader: Codable {
     public var enc: String?
 }
 
+public enum JOSEParameter: String {
+    case typ = "typ"
+    case alg = "alg"
+    case enc = "enc"
+    case cty = "cty"
+}
+
+public enum JWTClaim: String {
+    case issuer = "iss"
+    case subject = "sub"
+    case audience = "aud"
+    case expiration = "exp"
+    case notBefore = "nbf"
+    case issuedAt = "iat"
+    case jwtID = "jti"
+}
+
 /// A JWT parser and builder.
 ///
 /// See also: [JSON Web Token (JWT)](https://tools.ietf.org/html/rfc7519)
@@ -44,7 +61,7 @@ public struct JWTComponents {
     public typealias JWSCompactSerialization = String
     public typealias JSONObject = [String: Any]
 
-    enum JSONPart {
+    private enum JSONPart {
         case jsonObject(JSONObject)
         case json(Data)
 
@@ -58,11 +75,20 @@ public struct JWTComponents {
             }
         }
 
+        var json: Data {
+            switch self {
+            case .jsonObject(let jsonObject):
+                return try! JWTParser.encode(jsonObject)
+            case .json(let data):
+                return data
+            }
+        }
+
         var jsonPretty: String {
             let obj: JSONObject
             switch self {
-            case .jsonObject(let object):
-                obj = object
+            case .jsonObject(let jsonObject):
+                obj = jsonObject
             case .json(let data):
                 obj = try! JWTParser.decode(JSONObject.self, from: data)
             }
@@ -74,8 +100,8 @@ public struct JWTComponents {
         func getValue<Value: Decodable>(_ type: Value.Type, forField key: String) throws -> Value? {
             var obj: JSONObject
             switch self {
-            case .jsonObject(let object):
-                obj = object
+            case .jsonObject(let jsonObject):
+                obj = jsonObject
             case .json(let data):
                 obj = try JWTParser.decode(JSONObject.self, from: data)
             }
@@ -89,8 +115,8 @@ public struct JWTComponents {
         mutating func setValue<Value: Encodable>(_ value: Value?, forField key: String) throws {
             var obj: JSONObject
             switch self {
-            case .jsonObject(let object):
-                obj = object
+            case .jsonObject(let jsonObject):
+                obj = jsonObject
             case .json(let data):
                 obj = try! JWTParser.decode(JSONObject.self, from: data)
             }
@@ -105,16 +131,7 @@ public struct JWTComponents {
     private var _payload: JSONPart?
     private var _signature: Data? // raw data
 
-    /// A small leeway in seconds, usually no more than a few minutes, to account for clock skew when validating expiration dates.
-    var leeway: Int {
-        didSet {
-            guard leeway <= 5*60, leeway >= 0 else {
-                fatalError("leeway value out of range")
-            }
-        }
-    }
-
-    /// Initializes a JWTComponents
+    /// Initializes a JWTComponents value.
     /// - Parameters:
     ///   - jwt: A JWT in JWS Compact Serialization format.
     ///   - leeway: A small leeway in seconds, usually no more than a few minutes, to account for clock skew when validating expiration dates.
@@ -146,11 +163,21 @@ public struct JWTComponents {
         }
     }
 
+    /// Initializes an empty JWTComponents value.
     public init() {
         leeway = 0
         _header = .jsonObject(JSONObject())
         _payload = nil
         _signature = nil
+    }
+
+    /// A small leeway in seconds, usually no more than a few minutes, to account for clock skew when validating expiration dates.
+    public var leeway: Int {
+        didSet {
+            guard leeway <= 5*60, leeway >= 0 else {
+                fatalError("leeway value out of range")
+            }
+        }
     }
 
     public var jwt: JWSCompactSerialization? {
@@ -177,18 +204,18 @@ public struct JWTComponents {
     /// Returns the header of the JWT as a base64URL string.
     public var header: Base64URLEncodedString {
         switch _header {
-        case .jsonObject(let header):
-            return try! JWTParser.encode(header).base64URLEncodedString()
+        case .jsonObject(let jsonObject):
+            return try! JWTParser.encode(jsonObject).base64URLEncodedString()
         case .json(let data):
             return data.base64URLEncodedString()
         }
     }
 
     /// Returns the header as a JSON Object encode as a `[String: Any]`.
-    public var structuredHeader: JSONObject {
+    public func header(as type: JSONObject.Type) throws -> JSONObject {
         switch _header {
-        case .jsonObject(let header):
-            return header
+        case .jsonObject(let jsonObject):
+            return jsonObject
         case .json(let data):
             return try! JWTParser.header(data: data)
         }
@@ -198,14 +225,39 @@ public struct JWTComponents {
     /// - Parameter type: The type of the structured header.
     /// - Throws: An error if the header could not be decoded to the given type.
     /// - Returns: The structured header.
-    public func header<Header: Decodable>(as type: Header.Type) throws -> Header {
-        let data = try header.base64URLDecodedData()
-        return try JWTParser.decode(type, from: data)
+    public func header<Header>(as type: Header.Type) throws -> Header where Header: Decodable {
+        return try JWTParser.decode(Header.self, from: _header.json)
     }
 
     /// In case this is a JWS, returns the payload of the JWT as a base64URL string, otherwise returns `nil`
     public var payload: Base64URLEncodedString? {
         get { _payload?.base64URLEncodedString }
+    }
+
+    /// Returns a structured payload of the JWT .
+    /// - Parameter type: The type of the structured payload.
+    /// - Throws: An error if the payload could not be decoded to the given type.
+    /// - Returns: The structured payload.
+    public func payload<Claims>(as type: Claims.Type) throws -> Claims where Claims: Decodable {
+        guard let payload = _payload else {
+            throw error("no payload")
+        }
+        return try JWTParser.decode(Claims.self, from: payload.json)
+    }
+
+    /// Returns a structured payload of the JWT as a JSONObject.
+    /// - Parameter type: The type of the structured payload.
+    /// - Throws: An error if the payload could not be decoded to the given type.
+    /// - Returns: The structured payload.
+    public func payload(as type: JSONObject.Type) throws -> JSONObject {
+        switch _payload {
+        case .some(.jsonObject(let jsonObject)):
+            return jsonObject
+        case .some(.json(let data)):
+            return try! JWTParser.decode(from: data) as! JSONObject
+        case .none:
+            throw error("no payload")
+        }
     }
 
     /// In case this is a JWS, returns the signature of the JWT as a base64URL string, otherwise returns `nil`.
@@ -216,38 +268,6 @@ public struct JWTComponents {
     /// In case of a JWS, returns the signature of the JWT as Data, otherwise it returns `nil`.
     public var signatureData: Data? {
         get { _signature }
-    }
-
-    /// Returns a structured payload of the JWT .
-    /// - Parameter type: The type of the structured payload.
-    /// - Throws: An error if the payload could not be decoded to the given type.
-    /// - Returns: The structured payload.
-    public func payload<Claims>(as type: Claims.Type) throws -> Claims where Claims: Decodable {
-        guard let payload = self.payload else {
-            throw error("no payload")
-        }
-        do {
-            let data = try payload.base64URLDecodedData()
-            return try JWTParser.decode(type, from: data)
-        } catch let underlyingError {
-            throw error(underlyingError: underlyingError)
-        }
-    }
-
-    /// Returns a structured payload of the JWT as a JSONObject.
-    /// - Parameter type: The type of the structured payload.
-    /// - Throws: An error if the payload could not be decoded to the given type.
-    /// - Returns: The structured payload.
-    public func payload<Claims>(as type: Claims.Type) throws -> Claims where Claims: Collection, Claims.Element == (key: String, value: Any) {
-        guard let payload = self.payload else {
-            throw error("no payload")
-        }
-        do {
-            let data = try payload.base64URLDecodedData()
-            return try JWTParser.decode(type, from: data)
-        } catch let underlyingError {
-            throw error(underlyingError: underlyingError)
-        }
     }
 
 
@@ -380,24 +400,6 @@ public struct JWTComponents {
 
     // MARK: - Private
 
-//    struct MyHeader: Decodable {
-//        let alg: String
-//        let enc: String?
-//        let zip: String?
-//        let jku: String?
-//        let jwk: String?
-//        let kid: String?
-//        let x5u: String?
-//        let x5c: String?
-//        let x5t: String?
-//        //let x5t#S256: String
-//
-//        let typ: String?
-//        let cty: String?
-//        let crit: String?
-//    }
-
-
     private func validateRegisteredClaimsForJWS() throws {
         struct RegisteredClaims: Decodable {
             let iss: StringOrURI?
@@ -427,35 +429,6 @@ public struct JWTComponents {
         // TODO: currently, we cannot test if the encoded representation is "compact".
         let _ = try JWTParser.part(part: string, PartType: JOSEHeader.self)
     }
-}
-
-/// Extensions which expose an API for Signers only.
-extension JWTComponents {
-    mutating func set(header: Base64URLEncodedString, payload: Base64URLEncodedString, signature: Data) {
-        _header = .json(try! header.base64URLDecodedData())
-        _payload = .json(try! payload.base64URLDecodedData())
-        _signature = signature
-    }
-}
-
-
-// MARK: - mutating header
-
-public enum JWTClaim: String {
-    case issuer = "iss"
-    case subject = "sub"
-    case audience = "aud"
-    case expiration = "exp"
-    case notBefore = "nbf"
-    case issuedAt = "iat"
-    case jwtID = "jti"
-}
-
-public enum JOSEParameter: String {
-    case typ = "typ"
-    case alg = "alg"
-    case enc = "enc"
-    case cty = "cty"
 }
 
 public extension JWTComponents {
@@ -560,6 +533,24 @@ public extension JWTComponents {
     }
 }
 
+extension JWTComponents: CustomStringConvertible {
+    public var description: String {
+        let parts = [_header.jsonPretty, _payload?.jsonPretty ?? "", _signature?.base64URLEncodedString() ?? ""]
+        return parts.joined(separator: ".\n")
+    }
+}
+
+// MARK: - Internal
+
+/// Extensions which expose an API for Signers only.
+extension JWTComponents {
+    mutating func set(header: Base64URLEncodedString, payload: Base64URLEncodedString, signature: Data) {
+        _header = .json(try! header.base64URLDecodedData())
+        _payload = .json(try! payload.base64URLDecodedData())
+        _signature = signature
+    }
+}
+
 extension JWTParser {
 
     static func header<Header: Decodable>(jwt: Base64URLEncodedString, headerType: Header.Type) throws -> Header {
@@ -603,10 +594,3 @@ extension JWTParser {
 }
 
 extension JWTComponents: ErrorThrowing {}
-
-extension JWTComponents: CustomStringConvertible {
-    public var description: String {
-        let parts = [_header.jsonPretty, _payload?.jsonPretty ?? "", _signature?.base64URLEncodedString() ?? ""]
-        return parts.joined(separator: ".\n")
-    }
-}

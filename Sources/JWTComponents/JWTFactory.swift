@@ -46,7 +46,7 @@ public enum JWTAlgorithm: String, CaseIterable {
     /// RSASSA-PSS using SHA-256 and MGF1 with SHA-256.
 }
 
-public struct JWTFactory {
+public enum JWTFactory {
     public static func createJWTVerifier(algorithm: JWTAlgorithm, keyData: Data) throws -> JWSVerifier {
         let verifier: JWSVerifier?
         switch algorithm {
@@ -110,15 +110,15 @@ public struct JWTFactory {
     }
 }
 
-extension JWTFactory {
-    public static func createJWTVerifier(algorithm string: String, keyData: Data) throws -> JWSVerifier {
+public extension JWTFactory {
+     static func createJWTVerifier(algorithm string: String, keyData: Data) throws -> JWSVerifier {
         guard let algorithm = JWTAlgorithm(rawValue: string) else {
             throw error("algorithm \(string) not supported")
         }
         return try createJWTVerifier(algorithm: algorithm, keyData: keyData)
     }
 
-    public static func createJWTSigner(algorithm string: String, keyData: Data) throws -> JWSSigner {
+    static func createJWTSigner(algorithm string: String, keyData: Data) throws -> JWSSigner {
         guard let algorithm = JWTAlgorithm(rawValue: string) else {
             throw error("algorithm \(string) not supported")
         }

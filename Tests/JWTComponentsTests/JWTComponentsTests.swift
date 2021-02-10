@@ -62,10 +62,7 @@ final class JWTComponentsTests: XCTestCase {
 
         let key = "secure".data(using: .utf8)!
         XCTAssertNoThrow(try jwtc.sign(withKey: key))
-        let jwt = try jwtc.jwtCompact()
-        print(jwt)
-        print(jwtc)
-
+        XCTAssertNoThrow(try jwtc.jwtCompact())
         let verifier = try JWTFactory.createJWTVerifier(algorithm: "HS256", keyData: key)
 
         XCTAssertNoThrow(try jwtc.verify(with: verifier))
@@ -81,8 +78,7 @@ final class JWTComponentsTests: XCTestCase {
     func testExample1() throws {
         let jwt = "ewogICJhbGciOiAiRVMyNTYiLAogICJ0eXAiOiAiSldUIgp9.ewogICJzdWIiOiAiMTIzNDU2Nzg5MCIsCiAgIm5hbWUiOiAiSm9obiBEb2UiLAogICJpYXQiOiAxNTE2MjM5MDIyCn0.rrpQhPNCG5_Kf7tyzrd25D7I0GK4aYO_NPqmtM8i8NJR1FLj_dt4G7FpM5xwAaZyXuDzguhKHupoABpHYVRNxQ"
 
-        let jwtc = try JWTComponents(jwt: jwt)
-        print(jwtc)
+        XCTAssertNoThrow(try JWTComponents(jwt: jwt))
     }
 
     func testValidation() throws {
@@ -111,8 +107,9 @@ final class JWTComponentsTests: XCTestCase {
         }
         let verifier = try JWTFactory.createJWTVerifier(algorithm: .HS256, keyData: key)
         try JWTComponents(jwt: jwt).validate(with: verifier, forHeader: MyHeader.self, claims: MyClaims.self) { (header, claims) in
-            print("header: \(header)")
-            print("claims: \(claims)")
+            // TODO: add validations
+            //print("header: \(header)")
+            //print("claims: \(claims)")
         }
     }
 
@@ -124,7 +121,6 @@ final class JWTComponentsTests: XCTestCase {
 
         XCTAssertThrowsError(try jwtc.validate()) { error in
             XCTAssert(String(describing: error).contains("expired"))
-            print(error)
         }
     }
 
@@ -145,7 +141,6 @@ final class JWTComponentsTests: XCTestCase {
 
         XCTAssertThrowsError(try jwtc.validate()) { error in
             XCTAssert(String(describing: error).contains("cannot process"))
-            print(error)
         }
     }
 

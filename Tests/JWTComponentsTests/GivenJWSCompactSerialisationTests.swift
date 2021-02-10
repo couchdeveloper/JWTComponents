@@ -79,7 +79,6 @@ class GivenJWSCompactSerialisationTests: XCTestCase {
             let verifier = try JWTFactory.createJWTVerifier(algorithm: alg, keyData: fixture.verifierKeyData)
 
             XCTAssertThrowsError(try jwtc.verify(with: verifier)) { error in
-                print(String(describing: error))
                 XCTAssert(String(describing: error).contains("signature verification failed"))
             }
         }
