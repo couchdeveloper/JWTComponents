@@ -57,7 +57,7 @@ public enum JWTClaim: String {
 ///
 /// See also: [JSON Web Token (JWT)](https://tools.ietf.org/html/rfc7519)
 public struct JWTComponents {
-    /// An ASCII string composed from `header` + "." + `payload` + "." + `signature` where `header`, `payload` and `signature` are base46URL encoded.
+    /// An ASCII string composed from `header` + "." + `payload` + "." + `signature` where `header`, `payload` and `signature` are base64URL encoded.
     public typealias JWSCompactSerialization = String
     public typealias JSONObject = [String: Any]
 
@@ -314,7 +314,7 @@ public struct JWTComponents {
 
     /// Validates the registered claims.
     ///
-    /// - Throws: An error of the JWT is not valid.
+    /// - Throws: An error if the JWT is not valid.
     public func validate() throws {
         try validateRegisteredClaimsForJWS()
     }
@@ -325,7 +325,7 @@ public struct JWTComponents {
     ///   - headerType: The type of the header.
     ///   - claimsType: The type of the claims.
     ///   - validate: A custom validation function.
-    /// - Throws: An error of the JWT is not valid.
+    /// - Throws: An error if the JWT is not valid.
     public func validate<Header, Claims>(forHeader headerType: Header.Type,
                                   claims claimsType: Claims.Type,
                                   validate: (Header, Claims) throws -> Void) throws
@@ -340,7 +340,7 @@ public struct JWTComponents {
     ///   - headerType: The type of the header.
     ///   - claimsType: The type of the claims.
     ///   - validate: A custom validation function.
-    /// - Throws: An error of the JWT is not valid.
+    /// - Throws: An error if the JWT is not valid.
     public func validate<Header, Claims>(with verifier: JWSVerifier,
                                         forHeader headerType: Header.Type,
                                         claims claimsType: Claims.Type,
