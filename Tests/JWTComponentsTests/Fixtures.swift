@@ -17,119 +17,91 @@ enum Fixture {
         let iat: Int
     }
 
-    // MARK: - ES256
-    static let privateKeyPem_P256 = """
-    -----BEGIN PRIVATE KEY-----
-    MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglVOBHVEhQnb0EodR
-    IJ82K/K3FKPMtg8ifhlwHmgo3VqhRANCAASiwkvjl72lCjlGzuP0pxumYJvid468
-    4xcN47P/P6KeIB1wnh4EkNeHRzSMIkGu1XSmKi3DrxnTzx13UZ9bapEC
-    -----END PRIVATE KEY-----
-    """
+    enum HS256 {
+        static let jwtHeaderJson = """
+        {
+          "alg": "HS256",
+          "typ": "JWT"
+        }
+        """.compacted()
 
-    static let privateKeyData_P256 = try! P256.Signing.PrivateKey(pemRepresentation: privateKeyPem_P256).rawRepresentation
+        static let jwtHeaderBase64URL = try! jwtHeaderJson.base64URLEncoded()
+    }
 
-    static let publicKeyPem_P256 = """
-    -----BEGIN PUBLIC KEY-----
-    MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEosJL45e9pQo5Rs7j9KcbpmCb4neO
-    vOMXDeOz/z+iniAdcJ4eBJDXh0c0jCJBrtV0piotw68Z088dd1GfW2qRAg==
-    -----END PUBLIC KEY-----
-    """
+    enum HS384 {
+        static let jwtHeaderJson = """
+        {
+          "alg": "HS384",
+          "typ": "JWT"
+        }
+        """.compacted()
 
-    static let publicKeyData_P256 = try! P256.Signing.PublicKey(pemRepresentation: publicKeyPem_P256).rawRepresentation
+        static let jwtHeaderBase64URL = try! jwtHeaderJson.base64URLEncoded()
+    }
 
+    enum HS512 {
+        static let jwtHeaderJson = """
+        {
+          "alg": "HS512",
+          "typ": "JWT"
+        }
+        """.compacted()
 
-    // MARK: - ES384
-    static let privateKeyPem_P384 = """
-    -----BEGIN PRIVATE KEY-----
-    MIG2AgEAMBAGByqGSM49AgEGBSuBBAAiBIGeMIGbAgEBBDDT2hGg8pg72F0S6v7j
-    HRCyP0QBpj/XJG+q7KsIKBP0AdyrRW+R4nfZ78OXEmI5GwChZANiAASY7R6H1D3A
-    rJXtegyDWwbvrW3eBBykEbPYf1vj+J9GC0IzWje/J4P328bCI4cXbjt0jKVXRHcJ
-    rdEcpyuXsPQUWpAlqul9J04IiWml3ebc2VH2hA8bUqkMGVWIVeEMmw8=
-    -----END PRIVATE KEY-----
-    """
+        static let jwtHeaderBase64URL = try! jwtHeaderJson.base64URLEncoded()
+    }
 
-    static let privateKeyData_P384 = try! P384.Signing.PrivateKey(pemRepresentation: privateKeyPem_P384).rawRepresentation
+    enum ES256 {
+        static let privateKeyBase64URL = "32rctLWRYx2FLuN0xz-A6rN_VgZtJALouDdXM4CVz4U"
+        static let privateKeyData = try! P256.Signing.PrivateKey(rawRepresentation: try! privateKeyBase64URL.base64URLDecodedData()).rawRepresentation
 
-    static let publicKeyPem_P384 = """
-    -----BEGIN PUBLIC KEY-----
-    MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEmO0eh9Q9wKyV7XoMg1sG761t3gQcpBGz
-    2H9b4/ifRgtCM1o3vyeD99vGwiOHF247dIylV0R3Ca3RHKcrl7D0FFqQJarpfSdO
-    CIlppd3m3NlR9oQPG1KpDBlViFXhDJsP
-    -----END PUBLIC KEY-----
-    """
+        static let publicKeyBase64URL = "36ROw0movpzkgIGjXs7u9ZDBkNuE4Zi8sPVY6LvgrU4uYH9aAK0ff4e-C6aF8pYW-FMjKYVse59RZYj1KfOzOg"
+        static let publicKeyData = try! P256.Signing.PublicKey(rawRepresentation: try! publicKeyBase64URL.base64URLDecodedData()).rawRepresentation
 
-    static let publicKeyData_P384 = try! P384.Signing.PublicKey(pemRepresentation: publicKeyPem_P384).rawRepresentation
+        static let jwtHeaderJson = """
+        {
+          "alg": "ES256",
+          "typ": "JWT"
+        }
+        """.compacted()
 
+        static let jwtHeaderBase64URL = try! jwtHeaderJson.base64URLEncoded()
+    }
 
-    // MARK: - ES512
-    static let privateKeyPem_P521 = """
-    -----BEGIN PRIVATE KEY-----
-    MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIAS92rE26cZxkUNVll
-    EW4yj8QgoQOTHkEmaff+gCTLHsukmSvfR/2yCSirWTHPjGNAVpOEp0DruqwugZIB
-    uup4zvOhgYkDgYYABAGuS9349o1gFe5P80OSk3Z9m9OTF9K0ZO0Eq9ZM/dzD3nZH
-    kjW8Cd/LGnKcBrCIO1k0ulsbE8S9PEbOTMGADFyw8gAaN509yNsmaPxlhf6fYlOT
-    oFVKVDxKs2uQycxft9+DQdTBTE1hmvOXxOPnOBZS0JQCBT16MdPvcPsaAdSmq0Wg
-    Nw==
-    -----END PRIVATE KEY-----
-    """
+    enum ES384 {
+        static let privateKeyBase64URL = "jewo2kVDXVnbMmU4iuCJsK9YPjoxNwoZLtTdR16kQnxk_NzyjdieIuPuerj5_u6O"
+        static let privateKeyData = try! P384.Signing.PrivateKey(rawRepresentation: try! privateKeyBase64URL.base64URLDecodedData()).rawRepresentation
 
-    static let privateKeyData_P521 = try! P521.Signing.PrivateKey(pemRepresentation: privateKeyPem_P521).rawRepresentation
+        static let publicKeyBase64URL = "ui90_chUt5ARf6McIO7uRyhkVET9DSN3niIil7e2niHTxuy02uBbmRuG8CuAoH9CN_xnZi-5x4qkzZkNQPdoy-ZAbcz1UtZFTY9ZXrTAU5q1GKQ722wiGqqHEbyQGYQc"
+        static let publicKeyData = try! P384.Signing.PublicKey(rawRepresentation: try! publicKeyBase64URL.base64URLDecodedData()).rawRepresentation
 
-    static let publicKeyPem_P521 = """
-    -----BEGIN PUBLIC KEY-----
-    MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQBrkvd+PaNYBXuT/NDkpN2fZvTkxfS
-    tGTtBKvWTP3cw952R5I1vAnfyxpynAawiDtZNLpbGxPEvTxGzkzBgAxcsPIAGjed
-    PcjbJmj8ZYX+n2JTk6BVSlQ8SrNrkMnMX7ffg0HUwUxNYZrzl8Tj5zgWUtCUAgU9
-    ejHT73D7GgHUpqtFoDc=
-    -----END PUBLIC KEY-----
-    """
+        static let jwtHeaderJson = """
+        {
+          "alg": "ES384",
+          "typ": "JWT"
+        }
+        """.compacted()
 
-    static let publicKeyData_P521 = try! P521.Signing.PublicKey(pemRepresentation: publicKeyPem_P521).rawRepresentation
+        static let jwtHeaderBase64URL = try! jwtHeaderJson.base64URLEncoded()
+    }
+
+    enum ES512 {
+        static let privateKeyBase64URL = "AWxkfU2FpG_yubZV-ZsLQxO8qi43Ibd4pYh-ZoBQTcjuPaEP6gzltkvfqIe2zX_8uGzdwfMDiAkKZVOKHjpOJNzr"
+        static let privateKeyData = try! P521.Signing.PrivateKey(rawRepresentation: try! privateKeyBase64URL.base64URLDecodedData()).rawRepresentation
+
+        static let publicKeyBase64URL = "AeF7exkY3iOPJMM_lITOk6LcJgb37LOO7JciZ0uhhmrEbhRgeJ2mPQKLJepcSLz7jJ8M_nNXnzSsy2bDS88wTMnEALQcSJ8rc5z64wJt-5pbZvsWxWd0kOAyzd8ehQ7Lz9rqeWIkz6JV6YquGevgz02Rd1ZV1BNhD8BjogESrRPxf-Av"
+        static let publicKeyData = try! P521.Signing.PublicKey(rawRepresentation: try! publicKeyBase64URL.base64URLDecodedData()).rawRepresentation
+
+        static let jwtHeaderJson = """
+        {
+          "alg": "ES512",
+          "typ": "JWT"
+        }
+        """.compacted()
+
+        static let jwtHeaderBase64URL = try! jwtHeaderJson.base64URLEncoded()
+    }
 
     // MARK: -
-
-    static let jwtHeaderJson_ES256 = """
-    {
-      "alg": "ES256",
-      "typ": "JWT"
-    }
-    """.compacted()
-
-    static let jwtHeaderJson_ES384 = """
-    {
-      "alg": "ES384",
-      "typ": "JWT"
-    }
-    """.compacted()
-
-    static let jwtHeaderJson_ES512 = """
-    {
-      "alg": "ES512",
-      "typ": "JWT"
-    }
-    """.compacted()
-
-
-    static let jwtHeaderJson_HS256 = """
-    {
-      "alg": "HS256",
-      "typ": "JWT"
-    }
-    """.compacted()
-
-    static let jwtHeaderJson_HS384 = """
-    {
-      "alg": "HS384",
-      "typ": "JWT"
-    }
-    """.compacted()
-
-    static let jwtHeaderJson_HS512 = """
-    {
-      "alg": "HS512",
-      "typ": "JWT"
-    }
-    """.compacted()
 
     static let jwtPayloadJson = """
     {
@@ -139,15 +111,7 @@ enum Fixture {
     }
     """.compacted()
 
-    static let jwtHeaderBase64URL_HS256 = try! jwtHeaderJson_HS256.base64URLEncoded()
-    static let jwtHeaderBase64URL_HS384 = try! jwtHeaderJson_HS384.base64URLEncoded()
-    static let jwtHeaderBase64URL_HS512 = try! jwtHeaderJson_HS512.base64URLEncoded()
-    static let jwtHeaderBase64URL_ES256 = try! jwtHeaderJson_ES256.base64URLEncoded()
-    static let jwtHeaderBase64URL_ES384 = try! jwtHeaderJson_ES384.base64URLEncoded()
-    static let jwtHeaderBase64URL_ES512 = try! jwtHeaderJson_ES512.base64URLEncoded()
-
     static let jwtPayloadBase64URL = try! jwtPayloadJson.base64URLEncoded()
-
 
     static let symmetricKeyData = "secret".data(using: .utf8)!
 
@@ -161,30 +125,30 @@ enum Fixture {
     static let all: [JWTFixture] = [
         .init(verifierKeyData: symmetricKeyData,
               algorithm: "HS256",
-              jwt: "\(jwtHeaderBase64URL_HS256).\(jwtPayloadBase64URL).ub7srKZNrlkC9jpqvPSYMwZp8IZQN1ZBCuld49qCqOs"),
+              jwt: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1MTYyMzkwMjIsIm5hbWUiOiJKb2huIERvZSIsInN1YiI6IjEyMzQ1Njc4OTAifQ.ub7srKZNrlkC9jpqvPSYMwZp8IZQN1ZBCuld49qCqOs"),
 
         .init(verifierKeyData: symmetricKeyData,
               algorithm: "HS384",
-              jwt: "\(jwtHeaderBase64URL_HS384).\(jwtPayloadBase64URL).EDqH7yZECcV2iD3BuRwjJjUreEul1_YhDP9jUqxZPru_ymdK3qt8VqrOxO9jYpJW"),
+              jwt: "eyJhbGciOiJIUzM4NCIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1MTYyMzkwMjIsIm5hbWUiOiJKb2huIERvZSIsInN1YiI6IjEyMzQ1Njc4OTAifQ.EDqH7yZECcV2iD3BuRwjJjUreEul1_YhDP9jUqxZPru_ymdK3qt8VqrOxO9jYpJW"),
 
         .init(verifierKeyData: symmetricKeyData,
               algorithm: "HS512",
-              jwt: "\(jwtHeaderBase64URL_HS512).\(jwtPayloadBase64URL).tKAtqOZxgyrxjs0GNb1rXpvCPda0exOFZXn3hDl22TkUreqeF0oT5bcwU6cDiztMDthAXZeBByAHNrofXRINIQ"),
+              jwt: "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1MTYyMzkwMjIsIm5hbWUiOiJKb2huIERvZSIsInN1YiI6IjEyMzQ1Njc4OTAifQ.tKAtqOZxgyrxjs0GNb1rXpvCPda0exOFZXn3hDl22TkUreqeF0oT5bcwU6cDiztMDthAXZeBByAHNrofXRINIQ"),
 
-        .init(verifierKeyData: publicKeyData_P256,
-              signerKeyData: try! P256.Signing.PrivateKey(pemRepresentation: privateKeyPem_P256).rawRepresentation,
+        .init(verifierKeyData: ES256.publicKeyData,
+              signerKeyData: ES256.privateKeyData,
               algorithm: "ES256",
-              jwt: "\(jwtHeaderBase64URL_ES256).\(jwtPayloadBase64URL).80V6HqQYeUPxiumEEwpFlHXC8FcyqFV0VUnMivJKb-fE7zP8GMhI-FscJWz7kqUPCjisc7N9CEWepZ4R6hzopw"),
+              jwt: "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1MTYyMzkwMjIsIm5hbWUiOiJKb2huIERvZSIsInN1YiI6IjEyMzQ1Njc4OTAifQ.xuSea_tH7pGFdx7E5d-GYL2O7aN2_252FVMZUhfWIVZCAxCSreO-UisNmmsuVcmY3yb51YpfysWBkOF-hgad5A"),
 
-        .init(verifierKeyData: publicKeyData_P384,
-              signerKeyData: try! P384.Signing.PrivateKey(pemRepresentation: privateKeyPem_P384).rawRepresentation,
+        .init(verifierKeyData: ES384.publicKeyData,
+              signerKeyData: ES384.privateKeyData,
               algorithm: "ES384",
-              jwt: "\(jwtHeaderBase64URL_ES384).\(jwtPayloadBase64URL).2JiM0Y6njKQ8dTSXZuFabMbQCJT_werqjSKBpS2FsqlFZNNQ1nPBlAL0csHaP0gfHn413n94o8gUCsC6g86x3NB2iZKI1mQG7blIzZA5mL4o8CkHJRXl3ibDlrcgkPv0"),
+              jwt: "eyJhbGciOiJFUzM4NCIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1MTYyMzkwMjIsIm5hbWUiOiJKb2huIERvZSIsInN1YiI6IjEyMzQ1Njc4OTAifQ.D9JmXkV_YCsMdrWJ86IXh-zWl8H6DPRydCJsNWVK0Ied6tNEwc-9KyYaCstzyYMsnAa-33upJ3YEG2O0YFjRRVxCgk669MG6qQVFu4bQYEYwqNOu-RhaUFHLi_JfsYJE"),
 
-        .init(verifierKeyData: publicKeyData_P521,
-              signerKeyData: try! P521.Signing.PrivateKey(pemRepresentation: privateKeyPem_P521).rawRepresentation,
+        .init(verifierKeyData: ES512.publicKeyData,
+              signerKeyData: ES512.privateKeyData,
               algorithm: "ES512",
-              jwt: "\(jwtHeaderBase64URL_ES512).\(jwtPayloadBase64URL).AQ2AxQll3zRv7ccheGtkLGNMyxnO-9400CGgFylfXggXzrz8LUtcv3UagvlfiPoCBK3ntmJySAn2wKdzeSZj06NVAFQsi9uXuzl1rL6bSyFVSn4se_AHok7malwfGoT3G2n0sJjKP8KsTqVq45eBdBnbvVhywvH-D_x86WGomqb7i0ll")
+              jwt: "eyJhbGciOiJFUzUxMiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1MTYyMzkwMjIsIm5hbWUiOiJKb2huIERvZSIsInN1YiI6IjEyMzQ1Njc4OTAifQ.AUNSejnqROw41lpVkGT6XkowklQlCDqOSR08Txjw_kku6hVCJ2e427B2W9xHNoLAY7rxvSQU4XH11wFIK2cyYjnYANtZekZ4abqFF6ImzEhIUiP243rRsLy0ASTisaAxTIpdWQSMVWoUdmghI4-JUY0fioJUG8qaG7RoSRVlkKyxBBtC")
     ]
 
 }
@@ -193,13 +157,19 @@ class GenerateFixture: XCTestCase {
 
     func x_test_generateKeys() {
         let privateKey_P256 = P256.Signing.PrivateKey()
-        print("=== P256:\n\(privateKey_P256.pemRepresentation)\n\n\(privateKey_P256.publicKey.pemRepresentation)")
+        print("== P256:")
+        print("Private: \(privateKey_P256.rawRepresentation.base64URLEncodedString())")
+        print("\nPublic: \(privateKey_P256.publicKey.rawRepresentation.base64URLEncodedString())")
 
         let privateKey_P384 = P384.Signing.PrivateKey()
-        print("\n=== P384:\n\(privateKey_P384.pemRepresentation)\n\n\(privateKey_P384.publicKey.pemRepresentation)")
+        print("== P384:")
+        print("Private: \(privateKey_P384.rawRepresentation.base64URLEncodedString())")
+        print("\nPublic: \(privateKey_P384.publicKey.rawRepresentation.base64URLEncodedString())")
 
         let privateKey_P521 = P521.Signing.PrivateKey()
-        print("\n=== P521:\n\(privateKey_P521.pemRepresentation)\n\n\(privateKey_P521.publicKey.pemRepresentation)")
+        print("== P521:")
+        print("Private: \(privateKey_P521.rawRepresentation.base64URLEncodedString())")
+        print("\nPublic: \(privateKey_P521.publicKey.rawRepresentation.base64URLEncodedString())")
     }
 
     func x_test_generateSignatures() throws {
@@ -219,7 +189,6 @@ class GenerateFixture: XCTestCase {
             print("JWT:\n\(header).\(payload).\(signature)")
         }
     }
-
 }
 
 extension Fixture.JSON {
