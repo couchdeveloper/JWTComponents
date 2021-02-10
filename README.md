@@ -1,6 +1,6 @@
 # JWTComponents
 
-[![Build Status](https://travis-ci.org/couchdeveloper/JWTComponents.svg?branch=master)](https://travis-ci.org/couchdeveloper/JWTComponents) [![GitHub license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0) [![Swift 5.3](https://img.shields.io/badge/Swift-5.3-orange.svg?style=flat)](https://developer.apple.com/swift/) ![Platforms macOS 10.15+ | Mac Catalyst 13.0+ | iOS 13+ | tvOS 13.0+ | watchOS 6.0+](https://img.shields.io/badge/Platform-macOS%2010.15%2B%20%7C%20Mac%20Catalyst%2013.0%2B%20%7C%20iOS%2013%2B%20%7C%20tvOS%2013.0%2B%20%7C%20watchOS%206.0%2B-brightgreen)
+[![Build Status](https://github.com/couchdeveloper/JWTComponents/workflows/Integrate%20Pull%20Request/badge.svg)](https://github.com/couchdeveloper/JWTComponents/actions) [![GitHub license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0) [![Swift 5.3](https://img.shields.io/badge/Swift-5.3-orange.svg?style=flat)](https://developer.apple.com/swift/) ![Platforms macOS 10.15+ | Mac Catalyst 13.0+ | iOS 13+ | tvOS 13.0+ | watchOS 6.0+](https://img.shields.io/badge/Platform-macOS%2010.15%2B%20%7C%20Mac%20Catalyst%2013.0%2B%20%7C%20iOS%2013%2B%20%7C%20tvOS%2013.0%2B%20%7C%20watchOS%206.0%2B-brightgreen)
 
 ## Overview
 
