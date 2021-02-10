@@ -31,7 +31,7 @@ JWTComponents is an easy to use library for composing and verifying [JSON Web To
 - watchOS 6.0+
 
 ## Install
-
+via SPM
 
 ## Usage Examples
 ### Compose a JWT
@@ -137,5 +137,5 @@ Otherwise, if the JWS is not valid, for example, if the JWS has been tampered wi
 JWTComponents.verify(with:) failed: ES256_JWTVerifier.verify(message:signature:) failed: JWT signature verification with algorithm ES256 failed
 ```
 
-## Documentation
+## Custom Validation
  TBD
