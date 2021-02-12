@@ -1,7 +1,1 @@
-import XCTest
-
-import JWTKitTests
-
-var tests = [XCTestCaseEntry]()
-tests += JWTKitTests.allTests()
-XCTMain(tests)
+fatalError("Please use --enable-test-discovery to run the tests instead")

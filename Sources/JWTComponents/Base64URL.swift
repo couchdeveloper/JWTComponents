@@ -1,5 +1,4 @@
 import Foundation
-import CryptoKit
 
 public typealias Base64URLEncodedString = String
 public typealias Base64URLEncodedData = Data
@@ -37,8 +36,8 @@ public extension Data {
     /// Returns the decoded Data from base64URL encoded `self`.
     func base64URLDecoded() throws -> Data {
         // base64URL -> base64
+        let padding = [0, 3, 2, 1][self.count % 4]
         var base64Data = self
-        let padding = base64Data.count % 4 > 0 ? count % 4 : 0
         base64Data.append([0x3D, 0x3D, 0x3D, 0x3D], count: padding)
         base64Data.withUnsafeMutableBytes { (rawMutableBufferPointer) in
             let unsafeMutableBufferPointer = rawMutableBufferPointer.bindMemory(to: UInt8.self)
