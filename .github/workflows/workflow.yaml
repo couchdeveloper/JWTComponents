@@ -15,3 +15,15 @@ jobs:
       run: swift build -v
     - name: Run tests
       run: swift test -v --sanitize=thread
+
+
+jobs:
+  build_linux:
+    runs-on: linux-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build
+      run: swift build -v
+    - name: Run tests
+      run: swift test -v --sanitize=thread
