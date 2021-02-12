@@ -1,17 +1,18 @@
 # JWTComponents
 
-[![Build Status](https://github.com/couchdeveloper/JWTComponents/workflows/Build/badge.svg?branch=main)](https://github.com/couchdeveloper/JWTComponents/actions) [![GitHub license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0) [![Swift 5.3](https://img.shields.io/badge/Swift-5.3-orange.svg?style=flat)](https://developer.apple.com/swift/) ![Platforms macOS 10.15+ | Mac Catalyst 13.0+ | iOS 13+ | tvOS 13.0+ | watchOS 6.0+](https://img.shields.io/badge/Platform-macOS%2010.15%2B%20%7C%20Mac%20Catalyst%2013.0%2B%20%7C%20iOS%2013%2B%20%7C%20tvOS%2013.0%2B%20%7C%20watchOS%206.0%2B-brightgreen)
+[![Build Status](https://github.com/couchdeveloper/JWTComponents/workflows/Build/badge.svg?branch=main)](https://github.com/couchdeveloper/JWTComponents/actions) [![GitHub license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0) [![Swift 5.3](https://img.shields.io/badge/Swift-5.3-orange.svg?style=flat)](https://developer.apple.com/swift/) ![Platforms macOS 10.15+ | Mac Catalyst 13.0+ | iOS 13+ | tvOS 13.0+ | watchOS 6.0+ | Linux ](https://img.shields.io/badge/Platform-macOS%2010.15%2B%20%7C%20Mac%20Catalyst%2013.0%2B%20%7C%20iOS%2013%2B%20%7C%20tvOS%2013.0%2B%20%7C%20watchOS%206.0%2B-brightgreen)
 
 ## Overview
 
-JWTComponents is an easy to use library for composing and verifying [JSON Web Token (JWT)](https://tools.ietf.org/html/rfc7519) based on Apple's new CryptoKit library.
+JWTComponents is an easy to use library for composing and verifying [JSON Web Token (JWT)](https://tools.ietf.org/html/rfc7519). On Apple platforms it's based on Apple's new CryptoKit library. For other platforms it uses [swift-crypto](https://github.com/apple/swift-crypto) as the underlying crypto framework.
 
 **JWTComponents is still Work in Progress!**
+
 
 **Caveats:**
 - Does currently not support JWE
 - Does not support crypto algorithms based on RSA.
-- Currently only supports Apple platforms, but it can be made easily avialable on other platforms using specific crypto libraries and JSON parsers.
+- Windows not yet supported
 
 **Contributors are wellcome!**
 
@@ -29,6 +30,7 @@ JWTComponents is an easy to use library for composing and verifying [JSON Web To
 - iOS 13+
 - tvOS 13.0+
 - watchOS 6.0+
+- Linux (tested on Ubuntu)
 
 ## Install
 via SPM
