@@ -143,8 +143,15 @@ struct HS_JWTVerifier<H: HashFunction>: JWSVerifier {
     }
 
     func verify(message: Data, signature: Data) throws {
-        guard HMAC<H>.isValidAuthenticationCode(signature, authenticating: message, using: symmetricKey) else {
-            throw error("JWT signature verification failed, using algorithm \(algorithm.rawValue)")
+        if #available(iOS 13.2, *) {
+            guard HMAC<H>.isValidAuthenticationCode(signature, authenticating: message, using: symmetricKey) else {
+                throw error("JWT signature verification failed, using algorithm \(algorithm.rawValue)")
+            }
+        } else {
+            let authCode = HMAC<H>.authenticationCode(for: message, using: symmetricKey)
+            guard Data(authCode) == signature else {
+                throw error("JWT signature verification failed, using algorithm \(algorithm.rawValue)")
+            }
         }
     }
 }
