@@ -10,7 +10,6 @@ extension JWTComponents {
 }
 
 final class JWTComponentsTests: XCTestCase {
-
     func testListAllAlgorithms() {
         let algs = JWTAlgorithm.allCases.map { $0.rawValue }
         print("JWS supported algorithms: \(algs.joined(separator: ", "))")

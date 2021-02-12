@@ -1,5 +1,5 @@
 import Foundation
-import CryptoKit
+import Crypto
 
 //+--------------+-------------------------------+--------------------+
 //| "alg" Param  | Digital Signature or MAC      | Implementation     |
@@ -51,13 +51,13 @@ public enum JWTFactory {
         let verifier: JWSVerifier?
         switch algorithm {
         case .HS256:
-            verifier = HS_JWTVerifier<CryptoKit.SHA256>(withKey: keyData)
+            verifier = HS_JWTVerifier<Crypto.SHA256>(withKey: keyData)
 
         case .HS384:
-            verifier = HS_JWTVerifier<CryptoKit.SHA384>(withKey: keyData)
+            verifier = HS_JWTVerifier<Crypto.SHA384>(withKey: keyData)
 
         case .HS512:
-            verifier = HS_JWTVerifier<CryptoKit.SHA512>(withKey: keyData)
+            verifier = HS_JWTVerifier<Crypto.SHA512>(withKey: keyData)
 
         case .ES256:
             let publicKey = try ES256_JWTVerifier.PublicKey(rawRepresentation: keyData)
@@ -82,13 +82,13 @@ public enum JWTFactory {
         let signer: JWSSigner?
         switch algorithm {
         case .HS256:
-            signer = HS_JWTSigner<CryptoKit.SHA256>(withKey: keyData)
+            signer = HS_JWTSigner<Crypto.SHA256>(withKey: keyData)
 
         case .HS384:
-            signer = HS_JWTSigner<CryptoKit.SHA384>(withKey: keyData)
+            signer = HS_JWTSigner<Crypto.SHA384>(withKey: keyData)
 
         case .HS512:
-            signer = HS_JWTSigner<CryptoKit.SHA512>(withKey: keyData)
+            signer = HS_JWTSigner<Crypto.SHA512>(withKey: keyData)
 
         case .ES256:
             let privateKey = try ES256_JWTSigner.PrivateKey(rawRepresentation: keyData)

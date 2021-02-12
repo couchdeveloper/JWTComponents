@@ -1,5 +1,4 @@
 import Foundation
-import CryptoKit
 
 public typealias Base64URLEncodedString = String
 public typealias Base64URLEncodedData = Data
