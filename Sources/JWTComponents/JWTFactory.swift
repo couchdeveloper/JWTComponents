@@ -149,7 +149,7 @@ struct HS_JWTVerifier<H: HashFunction>: JWSVerifier {
             }
         } else {
             let authCode = HMAC<H>.authenticationCode(for: message, using: symmetricKey)
-            guard Data(authCode) == signature else {
+            guard authCode == signature else {
                 throw error("JWT signature verification failed, using algorithm \(algorithm.rawValue)")
             }
         }
