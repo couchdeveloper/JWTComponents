@@ -1,5 +1,6 @@
 import struct Foundation.Data
 import struct Foundation.Date
+import struct Foundation.URL
 
 /// A JSON numeric value representing the number of seconds from1970-01-01T00:00:00Z UTC until the specified
 ///  UTC date/time, ignoring leap seconds.
@@ -7,7 +8,8 @@ public typealias NumericDate = Int
 
 /// A JSON string value, with the additional requirement that while arbitrary string values MAY be used, any
 /// value containing a ":" character MUST be a URI [RFC3986].
-public typealias StringOrURI = String
+public typealias StringOrURI = JWTComponents.StringOrURIValue
+public typealias Audience = JWTComponents.MultiValue<StringOrURI>
 
 public struct JOSEHeader: Codable {
 
@@ -35,6 +37,29 @@ public struct JOSEHeader: Codable {
     public var crit: String?
     public var enc: String?
 }
+
+public struct RegisteredClaims: Decodable {
+
+    enum CodingKeys: String, CodingKey {
+        case issuer = "iss"
+        case subject = "sub"
+        case audience = "aud"
+        case expiration = "exp"
+        case notBefore = "nbf"
+        case issuedAt = "iat"
+        case jwtID = "jti"
+    }
+
+    public let issuer: StringOrURI?
+    public let subject: StringOrURI?
+    public let audience: Audience?
+    public let expiration: NumericDate?
+    public let notBefore: NumericDate?
+    public let issuedAt: NumericDate?
+    public let jwtID: String?
+}
+
+
 
 public enum JOSEParameter: String {
     case typ = "typ"
@@ -132,6 +157,9 @@ public struct JWTComponents {
     private var _signature: Data? // raw data
 
     /// Initializes a JWTComponents value.
+    ///
+    /// Initialisation checks if the JWT is wellformed but it performs no semantic checks. For example, it
+    /// does not check if the JWT is expired when there is a `exp` claim set.
     /// - Parameters:
     ///   - jwt: A JWT in JWS Compact Serialization format.
     ///   - leeway: A small leeway in seconds, usually no more than a few minutes, to account for clock skew when validating expiration dates.
@@ -149,12 +177,13 @@ public struct JWTComponents {
             throw Self.error("malformed JWT: invalid number of parts")
         }
         do {
-            try Self.validateJOSEHeader(string: parts[0])
+            // Validate the JOSE header and claims by parsing the JSON, which
+            // just checks if they are syntactical correct.
+            try Self.parseJOSEHeader(string: parts[0])
             _header = .json(try parts[0].base64URLDecodedData())
 
-            // validate payload
+            try Self.parseClaimsForJWS(string: parts[1])
             let payload = try parts[1].base64URLDecodedData()
-            try JWTParser.validateJSON(payload)
             _payload = .json(payload)
 
             _signature = parts.count == 3 ? try parts[2].base64URLDecodedData() : Data()
@@ -180,11 +209,12 @@ public struct JWTComponents {
         }
     }
 
+    /// Returns a JWT as a JWS if it is wellformed. Otherwise returns `nil`.
     public var jwt: JWSCompactSerialization? {
         return try? jwtCompact()
     }
 
-    /// Returns a compact JWT representation.
+    /// Returns a JWT in a JWS Compact Serialization representation.
     ///
     /// The JWS Compact Serialization represents digitally signed or MACed content as a compact, URL-safe string.
     /// - Throws: An error when the JWT is malformed.
@@ -275,7 +305,7 @@ public struct JWTComponents {
 
     /// Verifies the JWT with the given verifier.
     ///
-    /// Verification only checks if the signatur is valid. It does not make any semantic checks for the claims or header parameters.
+    /// Verification only checks if JWT is wellformed and if the signatur is valid. It does not make any semantic checks for the claims or header parameters.
     ///
     /// - Parameter verifier: A verifier.
     /// - Throws: An error if the JWT is not signed, or signature test fails, or the JWT is malformed.
@@ -312,14 +342,23 @@ public struct JWTComponents {
 
     // MARK: - Validation
 
-    /// Validates the registered claims.
+
+    /// Validates registered claims.
     ///
-    /// - Throws: An error if the JWT is not valid.
+    /// Validates these registered claims as follows:
+    ///  - `exp`: ensure the current date is less than or equal the expiration date plus `leeway`.
+    ///  - `nbf`: ensure the current date is greater than or equal the "not before date" minus `leeway`.
+    ///
+    /// - Throws: An error if any of the registered claims is not valid.
     public func validate() throws {
         try validateRegisteredClaimsForJWS()
     }
 
-    /// Validates the claims.
+    /// Validates registered claims and calls the provided custom validation function.
+    ///
+    /// Validates these registered claims as follows:
+    ///  - `exp`: ensure the current date is less than or equal the expiration date plus `leeway`.
+    ///  - `nbf`: ensure the current date is greater than or equal the "not before date" minus `leeway`.
     ///
     /// - Parameters:
     ///   - headerType: The type of the header.
@@ -342,9 +381,9 @@ public struct JWTComponents {
     ///   - validate: A custom validation function.
     /// - Throws: An error if the JWT is not valid.
     public func validate<Header, Claims>(with verifier: JWSVerifier,
-                                        forHeader headerType: Header.Type,
-                                        claims claimsType: Claims.Type,
-                                        validate: (Header, Claims) throws -> Void) throws
+                                         forHeader headerType: Header.Type,
+                                         claims claimsType: Claims.Type,
+                                         validate: (Header, Claims) throws -> Void) throws
     where Header: Decodable, Claims: Decodable {
         try verify(with: verifier)
         try validate(try header(as: headerType), try payload(as: claimsType))
@@ -400,35 +439,36 @@ public struct JWTComponents {
 
     // MARK: - Private
 
+    /// Validates registered claims.
+    ///
+    /// Validate the following claims:
+    ///  - `exp`: ensure the current date is less than or equal the expiration date plus `leeway`.
+    ///  - `nbf`: ensure the current date is greater than or equal the "not before date" minus `leeway`.
     private func validateRegisteredClaimsForJWS() throws {
-        struct RegisteredClaims: Decodable {
-            let iss: StringOrURI?
-            let sub: StringOrURI?
-            let aud: [StringOrURI]?
-            let exp: NumericDate?
-            let nbf: NumericDate?
-            let iat: NumericDate?
-            let jti: String?
-        }
-
         let claims = try payload(as: RegisteredClaims.self)
 
-        if let exp = claims.exp {
+        if let exp = claims.expiration {
             guard Date().timeIntervalSince1970 <= Double(exp + leeway) else {
                 throw error("JWT expired at \(Date(timeIntervalSince1970: Double(exp)))")
             }
         }
-        if let nbf = claims.nbf {
+        if let nbf = claims.notBefore {
             guard Date().timeIntervalSince1970 >= Double(nbf - leeway) else {
                 throw error("cannot process JWT before \(Date(timeIntervalSince1970: Double(nbf))) ")
             }
         }
     }
 
-    private static func validateJOSEHeader<Base64URLEncodedString: StringProtocol>(string: Base64URLEncodedString) throws {
+    private static func parseJOSEHeader<Base64URLEncodedString: StringProtocol>(string: Base64URLEncodedString) throws {
         // TODO: currently, we cannot test if the encoded representation is "compact".
         let _ = try JWTParser.part(part: string, PartType: JOSEHeader.self)
     }
+
+    private static func parseClaimsForJWS<Base64URLEncodedString: StringProtocol>(string: Base64URLEncodedString) throws {
+        // TODO: currently, we cannot test if the encoded representation is "compact".
+        let _ = try JWTParser.part(part: string, PartType: RegisteredClaims.self)
+    }
+
 }
 
 public extension JWTComponents {
@@ -481,55 +521,88 @@ public extension JWTComponents {
 
 public extension JWTComponents {
 
-    /// The "iss" (issuer) claim identifies the principal that issued the JWT.
-    /// - Parameter issuer: A case-sensitive string containing a StringOrURI identifying the issuer.
-    /// - Returns: The mutated `self`.
-    @discardableResult
-    mutating func setIssuer(_ issuer: String?) -> JWTComponents {
-        try! self.setValue(issuer, forClaim: .issuer)
-        return self
+    /// Set  or get the Issuer claim (`iss`).
+    ///
+    /// The "iss" (Issuer) claim identifies the principal that issued the JWT.
+    var issuer: StringOrURI? {
+        get {
+            try! self.getValue(StringOrURI.self, forClaim: .issuer)
+        }
+        set {
+            try! self.setValue(newValue, forClaim: .issuer)
+        }
     }
 
-    /// The "sub" (subject) claim identifies the principal that is the subject the claims are referring to.
-    /// - Parameter subject: A case-sensitive string containing a StringOrURI value.
-    /// - Returns: The mutated `self`.
-    @discardableResult
-    mutating func setSubject(_ subject: String?) -> JWTComponents {
-        try! self.setValue(subject, forClaim: .subject)
-        return self
+    /// Set or get the Subject claim (`sub`).
+    ///
+    /// The "sub" (Subject) claim identifies the principal that is the subject the claims are referring to.
+    var subject: StringOrURI? {
+        get {
+            try! self.getValue(StringOrURI.self, forClaim: .subject)
+        }
+        set {
+            try! self.setValue(newValue, forClaim: .subject)
+        }
     }
 
-    /// The "aud" (audience) claim identifies the recipients that the JWT is intended for.
-    /// - Parameter audience: An array of case-sensitive strings, each containing a StringOrURI value.
-    /// - Returns: mutated `self`.
-    @discardableResult
-    mutating func setAudience(_ audience: [String]?) -> JWTComponents {
-        try! self.setValue(audience, forClaim: .audience)
-        return self
+    /// Set or get the Audience claim (`aud`).
+    ///
+    /// The "aud" (Audience) claim identifies the recipients that the JWT is intended for.
+    var audience: Audience? {
+        get {
+            try! self.getValue(Audience.self, forClaim: .audience)
+        }
+        set {
+            try! self.setValue(newValue, forClaim: .audience)
+        }
     }
 
-    @discardableResult
-    mutating func setExpiration(_ expiration: NumericDate?) -> JWTComponents {
-        try! self.setValue(expiration, forClaim: .expiration)
-        return self
+    /// Set or get the Expiration Time claim (`exp`).
+    ///
+    /// The "exp" (expiration time) claim identifies the expiration time on or after which the JWT MUST NOT be accepted for processing.
+    var expiration: NumericDate? {
+        get {
+            try! self.getValue(NumericDate.self, forClaim: .expiration)
+        }
+        set {
+            try! self.setValue(newValue, forClaim: .expiration)
+        }
     }
 
-    @discardableResult
-    mutating func setNotBefore(_ notBefore: NumericDate?) -> JWTComponents {
-        try! self.setValue(notBefore, forClaim: .notBefore)
-        return self
+    /// Set or get the "Not Before" claim (`nbf`).
+    ///
+    /// The "nbf" (not before) claim identifies the time before which the JWT MUST NOT be accepted for processing.
+    var notBefore: NumericDate? {
+        get {
+            try! self.getValue(NumericDate.self, forClaim: .notBefore)
+        }
+        set {
+            try! self.setValue(newValue, forClaim: .notBefore)
+        }
     }
 
-    @discardableResult
-    mutating func setIssuedAt(_ issuedAt: NumericDate?) -> JWTComponents {
-        try! self.setValue(issuedAt, forClaim: .issuedAt)
-        return self
+    /// Set or get the "issued at" claim (`iat`).
+    ///
+    /// The "iat" (issued at) claim identifies the time at which the JWT was issued.
+    var issuedAt: NumericDate? {
+        get {
+            try! self.getValue(NumericDate.self, forClaim: .issuedAt)
+        }
+        set {
+            try! self.setValue(newValue, forClaim: .issuedAt)
+        }
     }
 
-    @discardableResult
-    mutating func setJWTID(_ jwtID: String?) -> JWTComponents {
-        try! self.setValue(jwtID, forClaim: .jwtID)
-        return self
+    /// Set or get the "JWT ID" claim (`jti`).
+    ///
+    /// The "jti" (JWT ID) claim provides a unique identifier for the JWT.
+    var jwtID: String? {
+        get {
+            try! self.getValue(String.self, forClaim: .jwtID)
+        }
+        set {
+            try! self.setValue(newValue, forClaim: .jwtID)
+        }
     }
 }
 
@@ -594,3 +667,116 @@ extension JWTParser {
 }
 
 extension JWTComponents: ErrorThrowing {}
+
+extension JWTComponents {
+    public struct StringOrURIValue: Codable, ExpressibleByStringLiteral, Equatable, ErrorThrowing {
+        let value: String
+
+        public init(stringLiteral value: String) {
+            try! self.init(string: value)
+        }
+
+        public init(string: String) throws {
+            try Self.validateStringOrURI(string: string)
+            self.value = string
+        }
+
+        public init(from decoder: Decoder) throws {
+            let singleValueContainer = try decoder.singleValueContainer()
+            let string = try singleValueContainer.decode(String.self)
+            do {
+                try self.init(string: string)
+            } catch {
+                let context = DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Could not decode StringOrURI value.", underlyingError: error)
+                throw DecodingError.typeMismatch(StringOrURIValue.self, context)
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var singleValueContainer = encoder.singleValueContainer()
+            try singleValueContainer.encode(value)
+        }
+
+        static func validateStringOrURI(string: String) throws {
+            guard (URL(string: string) != nil) || string.contains(":") == false else {
+                throw Self.error("malformed StringOrURI")
+            }
+        }
+
+        static func == (lhs: Self, rhs: String) -> Bool {
+            return lhs.value == rhs
+        }
+
+        static func == (lhs: String, rhs: Self) -> Bool {
+            return lhs == rhs.value
+        }
+    }
+
+    public struct MultiValue<Element: Codable>: Codable {
+        let values: [Element]
+
+        init(value: Element) {
+            self.values = [value]
+        }
+
+        public init(values: [Element]) {
+            self.values = values
+        }
+
+        public init(from decoder: Decoder) throws {
+            let singleValueContainer = try decoder.singleValueContainer()
+            do {
+                self.init(value: try singleValueContainer.decode(Element.self))
+            } catch DecodingError.typeMismatch {
+                do {
+                    self.init(values: try singleValueContainer.decode([Element].self))
+                } catch {
+                    let context = DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Could not find either value of type '\(Element.self)' or '[\(Element.self)]'.", underlyingError: error)
+                    throw DecodingError.typeMismatch(MultiValue.self, context)
+                }
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            switch self.values.count {
+            case 1:
+                var container = encoder.singleValueContainer()
+                try container.encode(values[0])
+            default:
+                var container = encoder.singleValueContainer()
+                try container.encode(values)
+            }
+        }
+    }
+}
+
+extension JWTComponents.MultiValue: Equatable where Element: Equatable {}
+
+extension JWTComponents.MultiValue: ExpressibleByStringLiteral, ExpressibleByExtendedGraphemeClusterLiteral, ExpressibleByUnicodeScalarLiteral where Element: ExpressibleByStringLiteral,
+                                                                     Element.StringLiteralType == StringLiteralType,
+                                                                     Element.ExtendedGraphemeClusterLiteralType == StringLiteralType,
+                                                                     Element.UnicodeScalarLiteralType == StringLiteralType
+{
+    public init(stringLiteral value: String) {
+        let value = Element(stringLiteral: value)
+        self.init(value: value)
+    }
+    public init(extendedGraphemeClusterLiteral value: String) {
+        let value = Element(extendedGraphemeClusterLiteral: value)
+        self.init(value: value)
+    }
+    public init(unicodeScalarLiteral value: String) {
+        let value = Element(unicodeScalarLiteral: value)
+        self.init(value: value)
+    }
+}
+
+extension JWTComponents.MultiValue: ExpressibleByArrayLiteral where Element: ExpressibleByStringLiteral, Element.StringLiteralType == String {
+    public typealias ArrayLiteralElement = String
+
+    public init(arrayLiteral elements: Self.ArrayLiteralElement...) {
+        let values = elements.map { Element(stringLiteral: $0) }
+        self.init(values: values)
+    }
+
+}

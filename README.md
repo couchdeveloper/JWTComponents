@@ -44,19 +44,31 @@ You start off with a `JWTComponents` variable and specify claims and JOSE header
 #import JWTComponents
 
 var jwtc = JWTComponents()
-jwtc.setIssuer("com.mycompany")
-jwtc.setSubject("OIDC-client")
+jwtc.issuer = "com.mycompany"
+jwtc.subject = "OIDC-client"
 jwtc.setValue("HS256", forHeaderParameter: .alg)
 ```
 
-There are functions for standard claims, but you can set any custom claim value or any JOSE parameter whose type is JSON encodable:
+There are corresponding properties for standard claims, but you can set any custom claim value or any JOSE parameter whose type is JSON encodable:
 ```Swift
 jwtc.setValue(["value1", "value2"], forClaim: "myClaim")
+jwtc.setValue("HS256", forHeaderParameter: .alg)
 ```
+Some claims can either contain a single value or an array of values, the `aud` (audience) claim for example.
+This is how we can set a single value:
 
-When finished composing the JWT, we want to add a signature. What we need for this is a "Signer" and a secret or key to parameterize the signing.
+```Swift
+jwtc.audience = "myaudience"
+```
+This is how we can set multiple values:
+```Swift
+jwtc.audience = ["myaudience1", "myaudience2"]
+```
+Note that claim values may have certain requirements regarding syntax and `JWTComponents` is very picky about this. For example, the "audience" value must be either a single value of a `StringOrURI`, or an array of `StringOrURI`. The setter checks if the value or values conform to `StringOrURI`. When trying to set a claim value which is not a valid `StringOrURI` value - and since a setter cannot throw errors, a fatal error will occur.
 
-Since we already specified the signing algorithm (HS256 ) with the JOSE parameter `alg`,  URLComponents will try to find this signer automatically. We only need to specify the key:
+When finished composing the JWT, we want to add a signature. What we need for this is a "Signer" and a secret or key to parameterise the signing.
+
+Since we already specified the signing algorithm (HS256 ) with the JOSE parameter `alg`,  JWTComponents will try to find this signer automatically. We only need to specify the key:
 
 ```Swift
 try jwtc.sign(withKey: myStrongSecret)
@@ -95,6 +107,8 @@ As we can see, the JOSE header parameter `typ` has been automatically inserted w
 
 ### Verify a JWT
 
+Verifying a JWT checks if the JWT is wellformed and if the signature is valid.
+
 Given a JWT:
 ```
 let jwt = ewogICJhbGciOiAiRVMyNTYiLAogICJ0eXAiOiAiSldUIgp9.ewogICJzdWIiOiAiMTIzNDU2Nzg5MCIsCiAgIm5hbWUiOiAiSm9obiBEb2UiLAogICJpYXQiOiAxNTE2MjM5MDIyCn0.rrpQhPNCG5_Kf7tyzrd25D7I0GK4aYO_NPqmtM8i8NJR1FLj_dt4G7FpM5xwAaZyXuDzguhKHupoABpHYVRNxQ
@@ -121,7 +135,7 @@ It prints out this to the console:
 rrpQhPNCG5_Kf7tyzrd25D7I0GK4aYO_NPqmtM8i8NJR1FLj_dt4G7FpM5xwAaZyXuDzguhKHupoABpHYVRNxQ
 ```
 
-So, this is a JWS signed with ES256 which uses public-key cryptography to sign and verify the content. Let's assume, the given JWS is valid regarding the signing algorithm and we know the _public_ key and have it in its raw representation (a Data value).
+As we can see, this is a JWS signed with ES256 which uses public-key cryptography to sign and verify the content. Let's assume, the given JWS is valid regarding the signing algorithm and we know the _public_ key and have it in its raw representation (a Data value).
 
 Let's try to verify it:
 
@@ -139,5 +153,34 @@ Otherwise, if the JWS is not valid, for example, if the JWS has been tampered wi
 JWTComponents.verify(with:) failed: ES256_JWTVerifier.verify(message:signature:) failed: JWT signature verification with algorithm ES256 failed
 ```
 
-## Custom Validation
- TBD
+## Validation
+
+ ```Swift
+ #import JWTComponents
+
+ let jwtc = JWTComponets(jwt: jwt)
+ try jwtc.validate()
+
+ try jwtc.validate(forHeader: JOSEHeader.self,
+                   claims: RegisteredClaims.self) { header, claims in
+     try assertEqual(header.alg, "HS256")
+     try assertEqual(header.typ, "JWT")
+     try assertEqual(claims.issuer, "com.couchdeveloper")
+     try assertEqual(claims.audience, "test")
+ }
+
+
+```
+### Conveniently Verfiy Signature and Validate Claims and Header
+
+```Swift
+let verifier = try JWTFactory.createJWTVerifier(algorithm: .HS256, keyData: keyData)
+try jwtc.validate(with: verifier,
+                  forHeader: JOSEHeader.self,
+                  claims: RegisteredClaims.self) { header, claims in
+    try assertEqual(header.alg, "HS256")
+    try assertEqual(header.typ, "JWT")
+    try assertEqual(claims.issuer, "com.couchdeveloper")
+    try assertEqual(claims.audience, "test")
+}
+```

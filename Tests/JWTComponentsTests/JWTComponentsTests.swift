@@ -47,7 +47,7 @@ final class JWTComponentsTests: XCTestCase {
 
     func testSignShouldSucceed() throws {
         var jwtc = JWTComponents()
-        jwtc.setIssuer("TheIssuer")
+        jwtc.issuer = "TheIssuer"
         let key = "secret".data(using: .ascii)!
         let signer = try JWTFactory.createJWTSigner(algorithm: .HS256, keyData: key)
         XCTAssertNoThrow(try jwtc.sign(signer: signer))
@@ -55,8 +55,8 @@ final class JWTComponentsTests: XCTestCase {
 
     func testExampleCreateJWTSuccess() throws {
         var jwtc = JWTComponents()
-        jwtc.setIssuer("com.mycompany")
-        jwtc.setSubject("OIDC-client")
+        jwtc.issuer = "com.mycompany"
+        jwtc.subject = "OIDC-client"
         try jwtc.setValue("HS256", forHeaderParameter: .alg)
 
         let key = "secure".data(using: .utf8)!
@@ -116,7 +116,7 @@ final class JWTComponentsTests: XCTestCase {
         let jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ"
         var jwtc = try JWTComponents(jwt: jwt)
         let exp = Int(Date().addingTimeInterval(-3600).timeIntervalSince1970)
-        jwtc.setExpiration(exp)
+        jwtc.expiration = exp
 
         XCTAssertThrowsError(try jwtc.validate()) { error in
             XCTAssert(String(describing: error).contains("expired"))
@@ -127,7 +127,7 @@ final class JWTComponentsTests: XCTestCase {
         let jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ"
         var jwtc = try JWTComponents(jwt: jwt)
         let exp = Int(Date().addingTimeInterval(0).timeIntervalSince1970)
-        jwtc.setExpiration(exp)
+        jwtc.expiration = exp
 
         XCTAssertNoThrow(try jwtc.validate())
     }
@@ -136,7 +136,7 @@ final class JWTComponentsTests: XCTestCase {
         let jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ"
         var jwtc = try JWTComponents(jwt: jwt)
         let nbf = Int(Date().addingTimeInterval(3600).timeIntervalSince1970)
-        jwtc.setNotBefore(nbf)
+        jwtc.notBefore = nbf
 
         XCTAssertThrowsError(try jwtc.validate()) { error in
             XCTAssert(String(describing: error).contains("cannot process"))
@@ -147,9 +147,25 @@ final class JWTComponentsTests: XCTestCase {
         let jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ"
         var jwtc = try JWTComponents(jwt: jwt)
         let nbf = Int(Date().addingTimeInterval(0).timeIntervalSince1970)
-        jwtc.setNotBefore(nbf)
+        jwtc.notBefore = nbf
 
         XCTAssertNoThrow(try jwtc.validate())
+    }
+
+    func test_setSingleValueAudience_returnsSameValue() throws {
+        let jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ"
+        var jwtc = try JWTComponents(jwt: jwt)
+        XCTAssertNil(jwtc.audience)
+        jwtc.audience = "myaudience"
+        XCTAssertEqual(jwtc.audience, "myaudience")
+    }
+
+    func test_setMultiValueAudience_returnsSameValue() throws {
+        let jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ"
+        var jwtc = try JWTComponents(jwt: jwt)
+        XCTAssertNil(jwtc.audience)
+        jwtc.audience = ["myaudience1", "myaudience2"]
+        XCTAssertEqual(jwtc.audience, ["myaudience1", "myaudience2"])
     }
 
     // TODO: add more tests
