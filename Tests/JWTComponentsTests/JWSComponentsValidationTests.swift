@@ -1,5 +1,4 @@
 import Foundation
-import CryptoKit
 import XCTest
 @testable import JWTComponents
 
