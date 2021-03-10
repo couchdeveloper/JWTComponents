@@ -17,7 +17,7 @@ final class JWTComponentsTests: XCTestCase {
 
     func testCanParseJOSEHeader() throws {
         let jwt = Fixture.all.filter { $0.algorithm == "ES256"} .first!.jwt
-        let jwtc = try JWTComponents(jwt: jwt)
+        let jwtc = try JWTComponents(jws: jwt)
 
         let joseHeader = try jwtc.header(as: JOSEHeader.self)
         XCTAssertEqual(joseHeader.typ,  "JWT")
@@ -27,20 +27,20 @@ final class JWTComponentsTests: XCTestCase {
     func testCanParsePayload() throws {
         let jwt = Fixture.all.filter { $0.algorithm == "ES256"} .first!.jwt
         let jwtPayload = String(jwt.split(separator: ".").dropFirst().first!)
-        let payload = try JWTComponents(jwt: jwt).payload
+        let payload = try JWTComponents(jws: jwt).payload
         XCTAssertEqual(payload, jwtPayload)
     }
 
     func testCanParseSignature() throws {
         let jwt = Fixture.all.filter { $0.algorithm == "ES256"} .first!.jwt
         let jwtSignature = String(jwt.split(separator: ".").last!)
-        let signature = try JWTComponents(jwt: jwt).signature
+        let signature = try JWTComponents(jws: jwt).signature
         XCTAssertEqual(signature, jwtSignature)
     }
 
     func testReturnsJWT() throws {
         let jwt = Fixture.all.filter { $0.algorithm == "ES256"} .first!.jwt
-        let actualJWT = try JWTComponents(jwt: jwt).jwt
+        let actualJWT = try JWTComponents(jws: jwt).jwt
         XCTAssertNotNil(actualJWT)
         XCTAssertEqual(actualJWT, jwt)
     }
@@ -68,7 +68,7 @@ final class JWTComponentsTests: XCTestCase {
     }
 
     func testInitShouldFail() throws {
-        XCTAssertThrowsError(try JWTComponents(jwt: "ghghg")) { error in
+        XCTAssertThrowsError(try JWTComponents(jws: "ghghg")) { error in
             XCTAssertTrue(String(describing: error).contains("malformed JWT"))
             XCTAssertTrue(String(reflecting: error).contains("malformed JWT"))
         }
@@ -77,7 +77,7 @@ final class JWTComponentsTests: XCTestCase {
     func testExample1() throws {
         let jwt = "ewogICJhbGciOiAiRVMyNTYiLAogICJ0eXAiOiAiSldUIgp9.ewogICJzdWIiOiAiMTIzNDU2Nzg5MCIsCiAgIm5hbWUiOiAiSm9obiBEb2UiLAogICJpYXQiOiAxNTE2MjM5MDIyCn0.rrpQhPNCG5_Kf7tyzrd25D7I0GK4aYO_NPqmtM8i8NJR1FLj_dt4G7FpM5xwAaZyXuDzguhKHupoABpHYVRNxQ"
 
-        XCTAssertNoThrow(try JWTComponents(jwt: jwt))
+        XCTAssertNoThrow(try JWTComponents(jws: jwt))
     }
 
     func testValidation() throws {
@@ -105,7 +105,7 @@ final class JWTComponentsTests: XCTestCase {
             let iat: Int
         }
         let verifier = try JWTFactory.createJWTVerifier(algorithm: .HS256, keyData: key)
-        try JWTComponents(jwt: jwt).validate(with: verifier, forHeader: MyHeader.self, claims: MyClaims.self) { (header, claims) in
+        try JWTComponents(jws: jwt).validate(with: verifier, forHeader: MyHeader.self, claims: MyClaims.self) { (header, claims) in
             // TODO: add validations
             //print("header: \(header)")
             //print("claims: \(claims)")
@@ -114,7 +114,7 @@ final class JWTComponentsTests: XCTestCase {
 
     func test_validateFails_when_expired() throws {
         let jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ"
-        var jwtc = try JWTComponents(jwt: jwt)
+        var jwtc = try JWTComponents(jws: jwt)
         let exp = Int(Date().addingTimeInterval(-3600).timeIntervalSince1970)
         jwtc.expiration = exp
 
@@ -125,7 +125,7 @@ final class JWTComponentsTests: XCTestCase {
 
     func test_validatSucceeds_when_almostEpired() throws {
         let jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ"
-        var jwtc = try JWTComponents(jwt: jwt)
+        var jwtc = try JWTComponents(jws: jwt)
         let exp = Int(Date().addingTimeInterval(0).timeIntervalSince1970)
         jwtc.expiration = exp
 
@@ -134,7 +134,7 @@ final class JWTComponentsTests: XCTestCase {
 
     func test_valideteFails_when_NotBeforeNotMet() throws {
         let jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ"
-        var jwtc = try JWTComponents(jwt: jwt)
+        var jwtc = try JWTComponents(jws: jwt)
         let nbf = Int(Date().addingTimeInterval(3600).timeIntervalSince1970)
         jwtc.notBefore = nbf
 
@@ -145,7 +145,7 @@ final class JWTComponentsTests: XCTestCase {
 
     func test_validateSucceeeds_when_almostNotBeforeNotMet() throws {
         let jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ"
-        var jwtc = try JWTComponents(jwt: jwt)
+        var jwtc = try JWTComponents(jws: jwt)
         let nbf = Int(Date().addingTimeInterval(0).timeIntervalSince1970)
         jwtc.notBefore = nbf
 
@@ -154,7 +154,7 @@ final class JWTComponentsTests: XCTestCase {
 
     func test_setSingleValueAudience_returnsSameValue() throws {
         let jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ"
-        var jwtc = try JWTComponents(jwt: jwt)
+        var jwtc = try JWTComponents(jws: jwt)
         XCTAssertNil(jwtc.audience)
         jwtc.audience = "myaudience"
         XCTAssertEqual(jwtc.audience, "myaudience")
@@ -162,7 +162,7 @@ final class JWTComponentsTests: XCTestCase {
 
     func test_setMultiValueAudience_returnsSameValue() throws {
         let jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ"
-        var jwtc = try JWTComponents(jwt: jwt)
+        var jwtc = try JWTComponents(jws: jwt)
         XCTAssertNil(jwtc.audience)
         jwtc.audience = ["myaudience1", "myaudience2"]
         XCTAssertEqual(jwtc.audience, ["myaudience1", "myaudience2"])

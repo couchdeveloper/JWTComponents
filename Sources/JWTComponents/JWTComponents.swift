@@ -161,11 +161,11 @@ public struct JWTComponents {
     /// Initialisation checks if the JWT is wellformed but it performs no semantic checks. For example, it
     /// does not check if the JWT is expired when there is a `exp` claim set.
     /// - Parameters:
-    ///   - jwt: A JWT in JWS Compact Serialization format.
+    ///   - jws: A JWS in JWS Compact Serialization format.
     ///   - leeway: A small leeway in seconds, usually no more than a few minutes, to account for clock skew when validating expiration dates.
     /// - Throws: An error if the JWT is malformed.
-    public init(jwt: JWSCompactSerialization, leeway: Int = 120) throws {
-        let parts = jwt.split(separator: ".")
+    public init(jws: JWSCompactSerialization, leeway: Int = 120) throws {
+        let parts = jws.split(separator: ".")
         // Note, the given string should be either a JWE (5 parts) or JWS (3 parts).
         // Currently, JWE is not supported
         self.leeway = leeway
@@ -312,7 +312,7 @@ public struct JWTComponents {
     public func verify(with verifier: JWSVerifier) throws {
         do {
             let jwt = try self.jwtCompact()
-            try verifier.verify(jwt: jwt)
+            try verifier.verify(jws: jwt)
         } catch let underlyingError {
             throw error(underlyingError: underlyingError)
         }

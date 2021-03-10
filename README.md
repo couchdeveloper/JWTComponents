@@ -109,15 +109,15 @@ As we can see, the JOSE header parameter `typ` has been automatically inserted w
 
 Verifying a JWT checks if the JWT is wellformed and if the signature is valid.
 
-Given a JWT:
+Given a JWT - which is a  JWS in "JWS Compact Serialization" format: 
 ```
-let jwt = ewogICJhbGciOiAiRVMyNTYiLAogICJ0eXAiOiAiSldUIgp9.ewogICJzdWIiOiAiMTIzNDU2Nzg5MCIsCiAgIm5hbWUiOiAiSm9obiBEb2UiLAogICJpYXQiOiAxNTE2MjM5MDIyCn0.rrpQhPNCG5_Kf7tyzrd25D7I0GK4aYO_NPqmtM8i8NJR1FLj_dt4G7FpM5xwAaZyXuDzguhKHupoABpHYVRNxQ
+let jws = ewogICJhbGciOiAiRVMyNTYiLAogICJ0eXAiOiAiSldUIgp9.ewogICJzdWIiOiAiMTIzNDU2Nzg5MCIsCiAgIm5hbWUiOiAiSm9obiBEb2UiLAogICJpYXQiOiAxNTE2MjM5MDIyCn0.rrpQhPNCG5_Kf7tyzrd25D7I0GK4aYO_NPqmtM8i8NJR1FLj_dt4G7FpM5xwAaZyXuDzguhKHupoABpHYVRNxQ
 ```
 Note, that this is a different one as above. So, we use `JWTComponets` to get a glimpse what's in there:
 ```Swift
 #import JWTComponents
 
-let jwtc = JWTComponets(jwt: jwt)
+let jwtc = JWTComponets(jws: jws)
 print(jwtc)
 ```
 
@@ -158,7 +158,7 @@ JWTComponents.verify(with:) failed: ES256_JWTVerifier.verify(message:signature:)
  ```Swift
  #import JWTComponents
 
- let jwtc = JWTComponets(jwt: jwt)
+ let jwtc = JWTComponets(jws: jws)
  try jwtc.validate()
 
  try jwtc.validate(forHeader: JOSEHeader.self,

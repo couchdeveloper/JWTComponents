@@ -99,13 +99,13 @@ final class JWSComponentsValidationTests: XCTestCase {
 
     func testValidateWithValidClaimsShouldNotThrow() throws {
         let jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ"
-        let jwtc = try JWTComponents(jwt: jwt)
+        let jwtc = try JWTComponents(jws: jwt)
         XCTAssertNoThrow(try jwtc.validate())
     }
 
     func testValidateThrowsExpiredErrorWhenExpIsExpired() throws {
         let jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ"
-        var jwtc = try JWTComponents(jwt: jwt)
+        var jwtc = try JWTComponents(jws: jwt)
         jwtc.expiration = Int(Date().timeIntervalSince1970) - 3600
         XCTAssertThrowsError(try jwtc.validate()) { error in
             XCTAssertTrue(String(describing: error).contains("JWT expired"))
@@ -114,7 +114,7 @@ final class JWSComponentsValidationTests: XCTestCase {
 
     func testValidateThrowsNotValidYetErrorWhenNotBeforeIsInTheFuture() throws {
         let jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ"
-        var jwtc = try JWTComponents(jwt: jwt)
+        var jwtc = try JWTComponents(jws: jwt)
         jwtc.expiration = Int(Date().timeIntervalSince1970) + 2*3600
         jwtc.notBefore = Int(Date().timeIntervalSince1970) + 1*3600
         XCTAssertThrowsError(try jwtc.validate()) { error in
