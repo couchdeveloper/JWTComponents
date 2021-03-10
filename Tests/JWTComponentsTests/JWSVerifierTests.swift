@@ -33,7 +33,7 @@ class JWSVerifierTests: XCTestCase {
             let algorithm = JWTAlgorithm(rawValue: fixture.algorithm)!
             let keyData = fixture.verifierKeyData
             let verifier = try JWTFactory.createJWTVerifier(algorithm: algorithm, keyData: keyData)
-            XCTAssertNoThrow(try verifier.verify(jwt: jwt), "Verifier: \(verifier)")
+            XCTAssertNoThrow(try verifier.verify(jws: jwt), "Verifier: \(verifier)")
         }
     }
 
@@ -45,7 +45,7 @@ class JWSVerifierTests: XCTestCase {
                 throw "could not create JWT verifier"
             }
             let jwt = Fixture.all.filter { $0.algorithm == verifier.algorithm.rawValue} .first!.jwt
-            try verifier.verify(jwt: jwt)
+            try verifier.verify(jws: jwt)
         } catch {
             XCTFail("Test failure: \(error)")
         }
@@ -57,7 +57,7 @@ class JWSVerifierTests: XCTestCase {
                 throw "could not create JWT verifier"
             }
             let jwt = Fixture.all.filter { $0.algorithm == verifier.algorithm.rawValue} .first!.jwt
-            try verifier.verify(jwt: jwt)
+            try verifier.verify(jws: jwt)
             XCTFail("Unexpected PASS")
         } catch {
             print("\(error)")

@@ -13,8 +13,8 @@ public protocol JWSVerifier {
 
 extension JWSVerifier {
 
-    func verify(jwt: JWTComponents.JWSCompactSerialization) throws {
-        let jwtComponents = try JWTComponents(jwt: jwt)
+    func verify(jws: JWTComponents.JWSCompactSerialization) throws {
+        let jwtComponents = try JWTComponents(jws: jws)
         try verify(jwtComponents: jwtComponents)
     }
 
@@ -44,7 +44,7 @@ extension JWSVerifier {
     }
 
     func verifiedClaims<Claims: Decodable>(jwt: Base64URLEncodedString, claimsType: Claims.Type) throws -> Claims {
-        try self.verify(jwt: jwt)
+        try self.verify(jws: jwt)
         let claims = try Self.unverifiedClaims(jwt: jwt, claimsType: claimsType)
         return claims
     }

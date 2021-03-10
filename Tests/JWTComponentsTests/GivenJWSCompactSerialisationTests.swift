@@ -8,7 +8,7 @@ class GivenJWSCompactSerialisationTests: XCTestCase {
         let jwtHeader = String(jwt.split(separator: ".").first!)
         let jwtPayload = String(jwt.split(separator: ".").dropFirst().first!)
         let jwtSignature = String(jwt.split(separator: ".").dropFirst(2).last!)
-        let jwtc = try JWTComponents(jwt: jwt)
+        let jwtc = try JWTComponents(jws: jwt)
         XCTAssertNotNil(jwtc.jwt)
         XCTAssertNotNil(jwtc.payload)
         XCTAssertNotNil(jwtc.signature)
@@ -25,7 +25,7 @@ class GivenJWSCompactSerialisationTests: XCTestCase {
         let fixturePayloadData = try! fixtureJWTPayload.base64URLDecodedData()
         let fixtureClaims = try! JSONDecoder().decode(Fixture.Payload.self, from: fixturePayloadData)
 
-        let jwtc = try JWTComponents(jwt: fixtureJWT)
+        let jwtc = try JWTComponents(jws: fixtureJWT)
         let claims = try jwtc.payload(as: Fixture.Payload.self)
 
         XCTAssertEqual(claims, fixtureClaims)
@@ -38,7 +38,7 @@ class GivenJWSCompactSerialisationTests: XCTestCase {
         let fixtureHeaderData = try! fixtureJWTHeader.base64URLDecodedData()
         let fixtureHeader = try! JSONDecoder().decode(Fixture.Header.self, from: fixtureHeaderData)
 
-        let jwtc = try JWTComponents(jwt: fixtureJWT)
+        let jwtc = try JWTComponents(jws: fixtureJWT)
         let header = try jwtc.header(as: Fixture.Header.self)
 
         XCTAssertEqual(header, fixtureHeader)
@@ -46,7 +46,7 @@ class GivenJWSCompactSerialisationTests: XCTestCase {
 
     func test_verify_ValidJWS_shouldSucceed() throws {
         try Fixture.all.forEach { fixture in
-            let jwtc = try JWTComponents(jwt: fixture.jwt)
+            let jwtc = try JWTComponents(jws: fixture.jwt)
             guard let alg = try jwtc.getValue(String.self, forHeaderParameter: .alg) else {
                 throw "could not find algorithm in JWT header"
             }
@@ -61,7 +61,7 @@ class GivenJWSCompactSerialisationTests: XCTestCase {
         let fixtures: [Fixture.JWTFixture] = try Fixture.all.map { fixture in
             // "forge" a tampered JWS, which is intentionally elaborated with JWTComponents ;)
             var newFixture = fixture
-            var jwsc = try JWTComponents(jwt: fixture.jwt)
+            var jwsc = try JWTComponents(jws: fixture.jwt)
             let signature = jwsc.signature!
             try jwsc.setValue(true, forHeaderParameter: "isAdmin")
             let header = jwsc.header
@@ -72,7 +72,7 @@ class GivenJWSCompactSerialisationTests: XCTestCase {
         }
 
         try fixtures.forEach { fixture in
-            let jwtc = try JWTComponents(jwt: fixture.jwt)
+            let jwtc = try JWTComponents(jws: fixture.jwt)
             guard let alg = try jwtc.getValue(String.self, forHeaderParameter: .alg) else {
                 throw "could not find algorithm in JWT header"
             }
@@ -89,7 +89,7 @@ class GivenJWSCompactSerialisationTests: XCTestCase {
     func x_test_verify_ValidJWS_with_invalidKey_shouldFail() throws {
         let invalidKey = "invalid".data(using: .utf8)!
         try Fixture.all.forEach { fixture in
-            let jwtc = try JWTComponents(jwt: fixture.jwt)
+            let jwtc = try JWTComponents(jws: fixture.jwt)
             guard let alg = try jwtc.getValue(String.self, forHeaderParameter: .alg) else {
                 throw "could not find algorithm in JWT header"
             }
